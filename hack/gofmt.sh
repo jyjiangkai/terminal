@@ -1,3 +1,0 @@
-#! /bin/sh
-# format code
-go fmt ./...
