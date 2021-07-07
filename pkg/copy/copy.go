@@ -6,8 +6,8 @@ import (
 	"io"
 	"path/filepath"
 
-	"github.com/maoqide/kubeutil/pkg/kube"
-	stream_terminal "github.com/maoqide/kubeutil/pkg/terminal/stream"
+	"terminal/pkg/kube"
+	stream_terminal "terminal/pkg/terminal/stream"
 )
 
 var (

@@ -3,8 +3,8 @@ package initialize
 import (
 	"fmt"
 
-	"github.com/maoqide/kubeutil/pkg/client"
-	"github.com/maoqide/kubeutil/pkg/kube/cache"
+	"terminal/pkg/client"
+	"terminal/pkg/kube/cache"
 )
 
 var (

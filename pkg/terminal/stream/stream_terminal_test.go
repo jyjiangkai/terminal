@@ -4,9 +4,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/maoqide/kubeutil/pkg/client"
-	"github.com/maoqide/kubeutil/pkg/kube"
-	"github.com/maoqide/kubeutil/pkg/terminal/stream"
+	"terminal/pkg/client"
+	"terminal/pkg/kube"
+	"terminal/pkg/terminal/stream"
 )
 
 func TestExec(t *testing.T) {

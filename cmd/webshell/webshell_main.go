@@ -13,14 +13,11 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
-	corev1 "k8s.io/api/core/v1"
 
 	_ "terminal/initialize"
 	"terminal/pkg/kube"
-	kubeLog "terminal/pkg/kube/log"
 	"terminal/pkg/terminal"
 	wsterminal "terminal/pkg/terminal/websocket"
-	"terminal/utils"
 )
 
 var (
@@ -96,60 +93,6 @@ func serveWsTerminal(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func serveWsLogs(w http.ResponseWriter, r *http.Request) {
-	pathParams := mux.Vars(r)
-	namespace := pathParams["namespace"]
-	podName := pathParams["pod"]
-	containerName := pathParams["container"]
-	tailLine, _ := utils.StringToInt64(r.URL.Query().Get("tail"))
-	follow, _ := utils.StringToBool(r.URL.Query().Get("follow"))
-	log.Printf("log pod: %s, container: %s, namespace: %s, tailLine: %d, follow: %v\n", podName, containerName, namespace, tailLine, follow)
-
-	writer, err := kubeLog.NewWsLogger(w, r, nil)
-	if err != nil {
-		log.Printf("get writer failed: %v\n", err)
-		return
-	}
-	defer func() {
-		log.Println("close session.")
-		writer.Close()
-	}()
-
-	client, err := kube.GetClient()
-	if err != nil {
-		log.Printf("get kubernetes client failed: %v\n", err)
-		return
-	}
-	pod, err := client.PodBox.Get(podName, namespace)
-	if err != nil {
-		log.Printf("get kubernetes client failed: %v\n", err)
-		return
-	}
-	ok, err := terminal.ValidatePod(pod, containerName)
-	if !ok {
-		msg := fmt.Sprintf("Validate pod error! err: %v", err)
-		log.Println(msg)
-		writer.Write([]byte(msg))
-		writer.Close()
-		return
-	}
-
-	opt := corev1.PodLogOptions{
-		Container: containerName,
-		Follow:    follow,
-		TailLines: &tailLine,
-	}
-
-	err = client.PodBox.LogStreamLine(podName, namespace, &opt, writer)
-	if err != nil {
-		msg := fmt.Sprintf("log err: %v", err)
-		log.Println(msg)
-		writer.Write([]byte(msg))
-		writer.Close()
-	}
-	return
-}
-
 func main() {
 	router := mux.NewRouter()
 	router.PathPrefix("/debug/pprof/").Handler(http.DefaultServeMux)
@@ -160,6 +103,5 @@ func main() {
 	router.HandleFunc("/terminal", serveTerminal)
 	router.HandleFunc("/ws/{namespace}/{pod}/{container}/webshell", serveWsTerminal)
 	router.HandleFunc("/logs", serveLogs)
-	router.HandleFunc("/ws/{namespace}/{pod}/{container}/logs", serveWsLogs)
 	log.Fatal(http.ListenAndServe(*addr, router))
 }

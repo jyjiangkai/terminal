@@ -1,8 +1,8 @@
 package kube
 
 import (
-	kubeclient "github.com/maoqide/kubeutil/pkg/client"
-	"github.com/maoqide/kubeutil/utils"
+	kubeclient "terminal/pkg/client"
+	"terminal/utils"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"

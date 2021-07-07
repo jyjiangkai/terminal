@@ -11,9 +11,8 @@ require (
 	github.com/go-resty/resty/v2 v2.6.0
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.4.2
-	github.com/maoqide/kubeutil v0.0.0-20210512025225-e634961ef7df
-	github.com/spf13/cobra v1.2.1
-	github.com/spf13/pflag v1.0.5
+	github.com/imdario/mergo v0.3.7 // indirect
+	github.com/spf13/cobra v1.2.1 // indirect
 	k8s.io/api v0.21.2
 	k8s.io/apimachinery v0.21.2
 	k8s.io/cli-runtime v0.21.2
