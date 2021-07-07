@@ -14,10 +14,11 @@ import (
 	"time"
 
 	"encoding/json"
-	"github.com/maoqide/kubeutil/pkg/terminal"
+	"terminal/pkg/terminal"
 )
 
 var addr = flag.String("addr", "127.0.0.1:90", "http service address")
+
 //var addr = flag.String("addr", "10.222.114.241:90", "http service address")
 
 func main() {
@@ -89,7 +90,7 @@ func main() {
 		return
 	}
 
-	ticker := time.NewTicker(10*time.Minute)
+	ticker := time.NewTicker(10 * time.Minute)
 	defer ticker.Stop()
 
 	for {

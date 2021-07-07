@@ -15,12 +15,12 @@ import (
 	"github.com/gorilla/websocket"
 	corev1 "k8s.io/api/core/v1"
 
-	_ "github.com/maoqide/kubeutil/initialize"
-	"github.com/maoqide/kubeutil/pkg/kube"
-	kubeLog "github.com/maoqide/kubeutil/pkg/kube/log"
-	terminal "github.com/maoqide/kubeutil/pkg/terminal"
-	wsterminal "github.com/maoqide/kubeutil/pkg/terminal/websocket"
-	"github.com/maoqide/kubeutil/utils"
+	_ "terminal/initialize"
+	"terminal/pkg/kube"
+	kubeLog "terminal/pkg/kube/log"
+	"terminal/pkg/terminal"
+	wsterminal "terminal/pkg/terminal/websocket"
+	"terminal/utils"
 )
 
 var (

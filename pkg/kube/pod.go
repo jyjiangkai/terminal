@@ -15,8 +15,8 @@ import (
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/remotecommand"
 
-	terminal "github.com/maoqide/kubeutil/pkg/terminal"
-	"github.com/maoqide/kubeutil/utils"
+	"terminal/pkg/terminal"
+	"terminal/utils"
 )
 
 // PodBox provide functions for kubernetes pod.

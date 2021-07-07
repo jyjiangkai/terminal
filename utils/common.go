@@ -1,13 +1,13 @@
 package utils
 
 import (
-	"terminal/models"
-	"terminal/pkg/eks"
-	"terminal/pkg/eks/token"
 	"encoding/base64"
 	"fmt"
 	"github.com/go-openapi/runtime"
 	"net/http"
+	"terminal/models"
+	"terminal/pkg/eks"
+	"terminal/pkg/eks/token"
 	"time"
 )
 

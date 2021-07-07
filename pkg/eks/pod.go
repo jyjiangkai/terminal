@@ -11,13 +11,11 @@ import (
 	"terminal/pkg/terminal"
 )
 
-
 // Get get specified pod in specified namespace.
 func (c *EKSClient) Get(name, namespace string) (*corev1.Pod, error) {
 	opt := metav1.GetOptions{}
 	return c.k8sClient.CoreV1().Pods(namespace).Get(context.TODO(), name, opt)
 }
-
 
 // Exec exec into a pod
 func (c *EKSClient) Exec(cmd []string, ptyHandler terminal.PtyHandler, namespace, podName, containerName string) error {

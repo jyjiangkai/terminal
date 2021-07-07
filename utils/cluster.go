@@ -1,10 +1,10 @@
 package utils
 
 import (
-	"terminal/models"
-	"terminal/pkg/eks"
 	"fmt"
 	"sort"
+	"terminal/models"
+	"terminal/pkg/eks"
 )
 
 type ClustersController struct{}

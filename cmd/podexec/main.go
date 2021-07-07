@@ -8,21 +8,19 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"terminal/pkg/eks"
 	_ "terminal/initialize"
+	"terminal/pkg/eks"
 	"terminal/pkg/session"
 	"terminal/pkg/terminal"
 	"terminal/pkg/terminal/websocket"
 	"terminal/utils"
 )
 
-
 var (
 	addr = flag.String("addr", "0.0.0.0:90", "http service address")
 	//cmd  = []string{"/bin/sh"}
 	exec_command = []string{"/bin/sh", "-c", "TERM=xterm-256color; export TERM; [ -x /bin/bash ] && ([ -x /usr/bin/script ] && /usr/bin/script -q -c \"/bin/bash\" /dev/null || exec /bin/bash) || exec /bin/sh"}
 )
-
 
 func ServeWsTerminal(w http.ResponseWriter, r *http.Request) {
 	pathParams := mux.Vars(r)
@@ -74,7 +72,6 @@ func ServeWsTerminal(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-
 	//client, err := kube.GetClient()
 	//if err != nil {
 	//	log.Printf("get kubernetes client failed: %v\n", err)
@@ -104,7 +101,6 @@ func ServeWsTerminal(w http.ResponseWriter, r *http.Request) {
 	}
 	return
 }
-
 
 func main() {
 	router := mux.NewRouter()
