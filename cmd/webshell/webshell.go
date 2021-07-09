@@ -10,13 +10,12 @@ import (
 	"log"
 	"net/http"
 	_ "net/http/pprof"
+	"terminal/utils"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 
-	_ "terminal/initialize"
 	"terminal/pkg/kube"
-	"terminal/pkg/terminal"
 	wsterminal "terminal/pkg/terminal/websocket"
 )
 
@@ -75,7 +74,7 @@ func serveWsTerminal(w http.ResponseWriter, r *http.Request) {
 		log.Printf("get kubernetes client failed: %v\n", err)
 		return
 	}
-	ok, err := terminal.ValidatePod(pod, containerName)
+	ok, err := utils.ValidatePod(pod, containerName)
 	if !ok {
 		msg := fmt.Sprintf("Validate pod error! err: %v", err)
 		log.Println(msg)

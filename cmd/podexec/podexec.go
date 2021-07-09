@@ -3,17 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/gorilla/mux"
 	"log"
 	"net/http"
-	"terminal/pkg/eks/token"
-	"terminal/pkg/kube"
+	"terminal/utils"
 
-	"github.com/gorilla/mux"
-
-	_ "terminal/initialize"
 	"terminal/pkg/eks"
-	"terminal/pkg/session"
-	"terminal/pkg/terminal"
 	"terminal/pkg/terminal/websocket"
 )
 
@@ -40,30 +35,9 @@ func ServeWsTerminal(w http.ResponseWriter, r *http.Request) {
 		pty.Close()
 	}()
 
-	// Get project id form cookies, use ems api
-	sessions, err := session.EmsSessionAuth(r)
+	eksclient, err := eks.NewClient(r)
 	if err != nil {
-		log.Printf("get session failed: %v\n", err)
-		return
-	}
-
-	// Get cluster info from cluster name and project id
-	cluster, err := kube.GetClusterInfo("redisnotdelete", sessions.ProjectID)
-	if err != nil {
-		log.Printf("get cluster info: cluster %s, projectID %s, error: %v", "redisnotdelete", sessions.ProjectID, err)
-		return
-	}
-
-	// Get token
-	eksToken, err := token.GetToken(r, cluster, sessions.ProjectID)
-	if err != nil {
-		log.Printf("get or validate cluster token: cluster %s %s, projectID %s, error: %v", *cluster.Name, *cluster.APIServerAddress, sessions.ProjectID, err)
-		return
-	}
-
-	eksclient, err := eks.NewClient(*cluster.APIServerAddress, eksToken)
-	if err != nil {
-		log.Printf("create eks client: api server: %s, token: %s, error: %v", *cluster.APIServerAddress, eksToken, err)
+		log.Printf("create eks client failed, error: %v", err)
 		return
 	}
 
@@ -72,20 +46,9 @@ func ServeWsTerminal(w http.ResponseWriter, r *http.Request) {
 		log.Printf("get kubernetes client failed: %v\n", err)
 		return
 	}
-
-	//client, err := kube.GetClient()
-	//if err != nil {
-	//	log.Printf("get kubernetes client failed: %v\n", err)
-	//	return
-	//}
-	//pod, err := client.PodBox.Get(podName, namespace)
-	//if err != nil {
-	//	log.Printf("get kubernetes client failed: %v\n", err)
-	//	return
-	//}
 	log.Printf("Get pod: %v\n", pod)
 
-	ok, err := terminal.ValidatePod(pod, containerName)
+	ok, err := utils.ValidatePod(pod, containerName)
 	if !ok {
 		msg := fmt.Sprintf("Validate pod error! err: %v", err)
 		log.Println(msg)

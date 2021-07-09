@@ -6,7 +6,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"log"
 	"net/http"
-	ekstoken "terminal/pkg/eks/token"
 	"terminal/pkg/kube"
 	"terminal/pkg/session"
 )
@@ -15,11 +14,6 @@ import (
 type Client struct {
 	*PodBox
 }
-
-//type Client struct {
-//	k8sClient kubernetes.Interface
-//	config    *restclient.Config
-//}
 
 // NewClient new eke client
 func NewClient(r *http.Request) (*Client, error) {
@@ -51,7 +45,7 @@ func NewClient(r *http.Request) (*Client, error) {
 	}
 
 	// Get token
-	token, err := ekstoken.GetToken(r, cluster, sessions.ProjectID)
+	token, err := GetToken(r, cluster, sessions.ProjectID)
 	if err != nil {
 		return nil, err
 	}

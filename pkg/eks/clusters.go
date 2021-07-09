@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"terminal/models"
 	"time"
 )
 
@@ -67,7 +66,37 @@ type EKSCluster struct {
 	} `json:"status"`
 }
 
-func GetClusterInfo(clusterList *unstructured.UnstructuredList, clusterName, projectID string) (*models.Cluster, error) {
+// Cluster cluster
+//
+// swagger:model Cluster
+type Cluster struct {
+
+	// api server address
+	// Required: true
+	APIServerAddress string `json:"apiServerAddress"`
+
+	// healthy
+	// Required: true
+	Healthy bool `json:"healthy"`
+
+	// name
+	// Required: true
+	Name string `json:"name"`
+
+	// owned by current user
+	// Required: true
+	OwnedByCurrentUser bool `json:"owned_by_current_user"`
+
+	// project ID
+	// Required: true
+	ProjectID string `json:"projectID"`
+
+	// status
+	// Required: true
+	Status string `json:"status"`
+}
+
+func GetClusterInfo(clusterList *unstructured.UnstructuredList, clusterName, projectID string) (*Cluster, error) {
 	for _, cluster := range clusterList.Items {
 		jsonBytes, err := cluster.MarshalJSON()
 		if err != nil {
@@ -86,7 +115,7 @@ func GetClusterInfo(clusterList *unstructured.UnstructuredList, clusterName, pro
 		projects := eksCluster.Spec.Projects
 
 		if len(projects) > 0 && projects[0] == projectID && name == clusterName {
-			retc := &models.Cluster{
+			retc := &Cluster{
 				APIServerAddress:   eksCluster.Spec.Eks.APIAddress,
 				Name:               eksCluster.Spec.Eks.EksName,
 				ProjectID:          eksCluster.Spec.Projects[0],

@@ -1,11 +1,9 @@
 package terminal
 
 import (
-	"fmt"
 	"io"
 	"time"
 
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/remotecommand"
 )
 
@@ -29,6 +27,13 @@ const (
 	EndOfTransmission = "\u0004"
 )
 
+type TerminalMessage struct {
+	Operation string `json:"Op"`
+	Data      string `json:"Data"`
+	Rows      uint16 `json:"Rows"`
+	Cols      uint16 `json:"Cols"`
+}
+
 // PtyHandler is what remotecommand expects from a pty
 type PtyHandler interface {
 	remotecommand.TerminalSizeQueue
@@ -37,24 +42,4 @@ type PtyHandler interface {
 	Stdin() io.Reader
 	Stdout() io.Writer
 	Stderr() io.Writer
-}
-
-type TerminalMessage struct {
-	Operation string `json:"Op"`
-	Data      string `json:"Data"`
-	Rows      uint16 `json:"Rows"`
-	Cols      uint16 `json:"Cols"`
-}
-
-// ValidatePod validate pod.
-func ValidatePod(pod *corev1.Pod, containerName string) (bool, error) {
-	if pod.Status.Phase == corev1.PodSucceeded || pod.Status.Phase == corev1.PodFailed {
-		return false, fmt.Errorf("cannot exec into a container in a completed pod; current phase is %s", pod.Status.Phase)
-	}
-	for _, c := range pod.Spec.Containers {
-		if containerName == c.Name {
-			return true, nil
-		}
-	}
-	return false, fmt.Errorf("pod has no container '%s'", containerName)
 }

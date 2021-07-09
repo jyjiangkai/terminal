@@ -22,13 +22,6 @@ type Client struct {
 	*ClusterBox
 }
 
-// Client contains all kube resource client
-//type Client struct {
-//	clientk8s kubernetes.Interface
-//	config    restclient.Config
-//	clientdyc dynamic.Interface
-//}
-
 // NewClient get all kube resource client.
 func NewClient() (*Client, error) {
 	kubeClient := kubeclient.KubeClientset()

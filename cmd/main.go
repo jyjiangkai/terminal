@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"terminal/utils"
 
 	"github.com/gorilla/mux"
 
 	"terminal/pkg/eks"
-	"terminal/pkg/terminal"
 	"terminal/pkg/terminal/websocket"
 )
 
@@ -48,7 +48,7 @@ func ServeWsTerminal(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Printf("Get pod: %v\n", pod)
 
-	ok, err := terminal.ValidatePod(pod, containerName)
+	ok, err := utils.ValidatePod(pod, containerName)
 	if !ok {
 		msg := fmt.Sprintf("Validate pod error! err: %v", err)
 		log.Println(msg)

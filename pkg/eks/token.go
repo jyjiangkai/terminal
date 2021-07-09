@@ -1,16 +1,16 @@
-package token
+package eks
 
 import (
 	k8s "k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
 	"net/http"
-	"terminal/models"
+	"terminal/pkg/eks/cache"
 )
 
 // validateToken
 // use the token to construct eks client and access any k8s interface.
 // if the access is successful, the token is valid.
-func validateToken(cluster *models.Cluster, token string) error {
+func validateToken(cluster *Cluster, token string) error {
 	// construct eks client
 	vTrue := true
 	kubeConfig := &k8s.ConfigFlags{
@@ -34,9 +34,9 @@ func validateToken(cluster *models.Cluster, token string) error {
 }
 
 // GetToken
-func GetToken(r *http.Request, cluster *models.Cluster, projectID string) (string, error) {
+func GetToken(r *http.Request, cluster *Cluster, projectID string) (string, error) {
 	// step1: get token from cache
-	token, err := getTokenFromCache(r.Cookies(), projectID)
+	token, err := cache.GetTokenFromCache(r.Cookies(), projectID)
 	if err != nil {
 		return "", err
 	}
@@ -47,7 +47,7 @@ func GetToken(r *http.Request, cluster *models.Cluster, projectID string) (strin
 	}
 
 	// step3: if token is invaild, query token from openstack again
-	token, err = getTokenFromOpenstack(r.Cookies(), projectID)
+	token, err = cache.GetTokenFromOpenstack(r.Cookies(), projectID)
 	if err != nil {
 		return "", err
 	}

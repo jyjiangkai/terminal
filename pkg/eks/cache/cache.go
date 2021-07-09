@@ -1,4 +1,4 @@
-package token
+package cache
 
 import (
 	"crypto/tls"
@@ -10,7 +10,9 @@ import (
 )
 
 const (
-	sessionid = "sessionid"
+	SessionID = "sessionid"
+	EksSvc    = "eks-dashboard-api.eks.svc.cluster.local"
+	EksAPI    = "/api/ecns/token/"
 )
 
 var (
@@ -23,7 +25,7 @@ func init() {
 
 func sessionID(cookies []*http.Cookie) string {
 	for _, cookie := range cookies {
-		if cookie.Name == sessionid {
+		if cookie.Name == SessionID {
 			return cookie.Value
 		}
 	}
@@ -31,19 +33,19 @@ func sessionID(cookies []*http.Cookie) string {
 }
 
 // 获取当前session的 token，如果token不存在，就从openstack获取，并存到缓存中
-func getTokenFromCache(cookies []*http.Cookie, projectID string) (string, error) {
+func GetTokenFromCache(cookies []*http.Cookie, projectID string) (string, error) {
 	// 根据 https://easystack.atlassian.net/browse/EAS-73995
 	// 当用户切换了项目时，需要重新issue当前项目的token，这样才对项目中的 eks 集群有
 	// 足够权限。所以在缓存中，key要加上projectID作为相同session下切换了项目后的区分
 	if token, ok := tokenManager.Load(sessionID(cookies) + projectID); ok {
 		return token.(userToken).Token, nil
 	}
-	return getTokenFromOpenstack(cookies, projectID)
+	return GetTokenFromOpenstack(cookies, projectID)
 }
 
 // 从openstack 获取session的 token，并将它存入缓存，如果已经有了，就覆盖
-func getTokenFromOpenstack(cookies []*http.Cookie, projectID string) (string, error) {
-	token, err := tokenManager.issue(cookies, "http", "eks-dashboard-api.eks.svc.cluster.local", "/api/ecns/token/")
+func GetTokenFromOpenstack(cookies []*http.Cookie, projectID string) (string, error) {
+	token, err := tokenManager.issue(cookies, "http", EksSvc, EksAPI)
 	if err != nil {
 		return "", err
 	}

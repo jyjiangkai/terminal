@@ -2,7 +2,9 @@ package utils
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
+	corev1 "k8s.io/api/core/v1"
 	"log"
 	"os"
 	"strconv"
@@ -85,4 +87,17 @@ func Env(key, defaultVal string) string {
 		return val
 	}
 	return defaultVal
+}
+
+// ValidatePod validate pod.
+func ValidatePod(pod *corev1.Pod, containerName string) (bool, error) {
+	if pod.Status.Phase == corev1.PodSucceeded || pod.Status.Phase == corev1.PodFailed {
+		return false, fmt.Errorf("cannot exec into a container in a completed pod; current phase is %s", pod.Status.Phase)
+	}
+	for _, c := range pod.Spec.Containers {
+		if containerName == c.Name {
+			return true, nil
+		}
+	}
+	return false, fmt.Errorf("pod has no container '%s'", containerName)
 }
