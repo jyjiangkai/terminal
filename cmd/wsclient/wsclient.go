@@ -54,8 +54,30 @@ func main() {
 	time.Sleep(5 * time.Second)
 
 	var in string
-	in = "whoami"
 	msg, err := json.Marshal(terminal.TerminalMessage{
+		Operation: "bind",
+	})
+	log.Printf("[client] send: %v\n", msg)
+	err = c.WriteMessage(websocket.TextMessage, []byte(msg))
+	if err != nil {
+		log.Println("write:", err)
+		return
+	}
+
+	msg, err = json.Marshal(terminal.TerminalMessage{
+		Operation: "resize",
+		Cols:      120,
+		Rows:      21,
+	})
+	log.Printf("[client] send: %v\n", msg)
+	err = c.WriteMessage(websocket.TextMessage, []byte(msg))
+	if err != nil {
+		log.Println("write:", err)
+		return
+	}
+
+	in = "whoami"
+	msg, err = json.Marshal(terminal.TerminalMessage{
 		Operation: "stdin",
 		Data:      string(in),
 	})

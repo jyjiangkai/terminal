@@ -39,14 +39,6 @@ type PtyHandler interface {
 	Stderr() io.Writer
 }
 
-// TerminalMessage is the messaging protocol between ShellController and TerminalSession.
-//type TerminalMessage struct {
-//	Operation string `json:"operation"`
-//	Data      string `json:"data"`
-//	Rows      uint16 `json:"rows"`
-//	Cols      uint16 `json:"cols"`
-//}
-
 type TerminalMessage struct {
 	Operation string `json:"Op"`
 	Data      string `json:"Data"`

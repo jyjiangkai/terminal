@@ -20,12 +20,12 @@ prepare:
 
 # Build binarys
 build:
-	go build -o bin/terminal cmd/podexec/main.go
+	go build -o bin/terminal cmd/main.go
 
 image: build-image push-image
 
 build-image:
-	go build -o bin/terminal cmd/podexec/main.go
+	go build -o bin/terminal cmd/main.go
 	docker build . -t $(DOCKER_REPO):$(DOCKER_TAG)
 
 push-image:

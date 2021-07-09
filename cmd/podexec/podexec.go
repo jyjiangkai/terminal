@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"terminal/pkg/eks/token"
+	"terminal/pkg/kube"
 
 	"github.com/gorilla/mux"
 
@@ -13,7 +15,6 @@ import (
 	"terminal/pkg/session"
 	"terminal/pkg/terminal"
 	"terminal/pkg/terminal/websocket"
-	"terminal/utils"
 )
 
 var (
@@ -47,20 +48,20 @@ func ServeWsTerminal(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get cluster info from cluster name and project id
-	cluster, err := utils.GetClusterInfo("redisnotdelete", sessions.ProjectID)
+	cluster, err := kube.GetClusterInfo("redisnotdelete", sessions.ProjectID)
 	if err != nil {
 		log.Printf("get cluster info: cluster %s, projectID %s, error: %v", "redisnotdelete", sessions.ProjectID, err)
 		return
 	}
 
 	// Get token
-	eksToken, err := utils.GetToken(r, cluster, sessions.ProjectID)
+	eksToken, err := token.GetToken(r, cluster, sessions.ProjectID)
 	if err != nil {
 		log.Printf("get or validate cluster token: cluster %s %s, projectID %s, error: %v", *cluster.Name, *cluster.APIServerAddress, sessions.ProjectID, err)
 		return
 	}
 
-	eksclient, err := eks.NewEKSClient(*cluster.APIServerAddress, eksToken)
+	eksclient, err := eks.NewClient(*cluster.APIServerAddress, eksToken)
 	if err != nil {
 		log.Printf("create eks client: api server: %s, token: %s, error: %v", *cluster.APIServerAddress, eksToken, err)
 		return

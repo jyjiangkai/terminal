@@ -65,7 +65,7 @@ func serveWsTerminal(w http.ResponseWriter, r *http.Request) {
 		pty.Close()
 	}()
 
-	client, err := kube.GetClient()
+	client, err := kube.NewClient()
 	if err != nil {
 		log.Printf("get kubernetes client failed: %v\n", err)
 		return

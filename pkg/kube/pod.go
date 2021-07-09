@@ -25,8 +25,8 @@ type PodBox struct {
 	config    *restclient.Config
 }
 
-//NewPodBoxWithClient creates a PodBox
-func NewPodBoxWithClient(c *clientset.Interface) *PodBox {
+//NewPodBoxClient creates a PodBox
+func NewPodBoxClient(c *clientset.Interface) *PodBox {
 	return &PodBox{clientset: *c}
 }
 

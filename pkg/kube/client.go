@@ -19,27 +19,29 @@ var commonDeleteOpt = metav1.DeleteOptions{
 // Client contains all kube resource client
 type Client struct {
 	*PodBox
-	//*EventBox
-	//*DeploymentBox
-	//*ServiceBox
-	//*StatefulSetBox
+	*ClusterBox
 }
 
-// GetClient get all kube resource client.
-func GetClient() (*Client, error) {
-	c := kubeclient.Clientset()
+// Client contains all kube resource client
+//type Client struct {
+//	clientk8s kubernetes.Interface
+//	config    restclient.Config
+//	clientdyc dynamic.Interface
+//}
+
+// NewClient get all kube resource client.
+func NewClient() (*Client, error) {
+	kubeClient := kubeclient.KubeClientset()
 	cfg, err := kubeclient.Config()
+	dycClient := kubeclient.DynamicClientset()
 	if err != nil {
 		return nil, err
 	}
-	cli := Client{
-		&PodBox{clientset: *c, config: cfg},
-		//&EventBox{clientset: *c},
-		//&DeploymentBox{clientset: *c},
-		//&ServiceBox{clientset: *c},
-		//&StatefulSetBox{clientset: *c},
+	client := &Client{
+		&PodBox{clientset: kubeClient, config: cfg},
+		&ClusterBox{clientset: dycClient},
 	}
-	return &cli, nil
+	return client, nil
 }
 
 // DecodeKubeObj decode kubernetes object from yaml

@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"k8s.io/client-go/dynamic"
 	"sync"
 	"time"
 
@@ -16,15 +17,21 @@ import (
 var kubeConfigPath = utils.Env("KUBE_CONFIG_PATH", "config")
 
 var defaultDuration = time.Duration(time.Second * 5)
-var kubeClientset *kubernetes.Interface
+var kubeClientset kubernetes.Interface
+var dynamicClientset dynamic.Interface
 var kubeconfig *rest.Config
 var once sync.Once
+
+func init() {
+	fmt.Println("initializing...")
+	BuildClientset()
+}
 
 func setupKubeClientset() error {
 	c, err := NewKubeInClusterClient()
 	if err == nil {
 		fmt.Printf("using in cluster clientset...\n")
-		kubeClientset = &c
+		kubeClientset = c
 		return nil
 	}
 
@@ -39,7 +46,31 @@ func setupKubeClientset() error {
 		return err
 	}
 	fmt.Printf("using out cluster clientset...\n")
-	kubeClientset = &c
+	kubeClientset = c
+	return nil
+}
+
+func setupDynamicClientset() error {
+	c, err := NewDynamicInClusterClient()
+	if err == nil {
+		fmt.Printf("using in cluster clientset...\n")
+		dynamicClientset = c
+		return nil
+	}
+
+	config, err := utils.ReadFile(kubeConfigPath)
+	if err != nil {
+		fmt.Printf("cannot read dynamic config file, err: %v \n", err)
+		return err
+	}
+	c, err = NewDynamicOutClusterClient(config)
+	if err != nil {
+		fmt.Printf("cannot create dynamic out cluster clientset, err: %v \n", err)
+		return err
+	}
+	fmt.Printf("using out cluster clientset...\n")
+	dynamicClientset = c
+
 	return nil
 }
 
@@ -49,12 +80,46 @@ func BuildClientset() {
 		if err := setupKubeClientset(); err != nil {
 			panic(err)
 		}
+		if err := setupDynamicClientset(); err != nil {
+			panic(err)
+		}
 	})
 }
 
-// Clientset return clientset
-func Clientset() *kubernetes.Interface {
+// KubeClientset return clientset
+func KubeClientset() kubernetes.Interface {
 	return kubeClientset
+}
+
+// DynamicClientset return clientset
+func DynamicClientset() dynamic.Interface {
+	return dynamicClientset
+}
+
+// NewDynamicInClusterClient
+func NewDynamicInClusterClient() (dynamic.Interface, error) {
+	cfg, err := rest.InClusterConfig()
+	if err != nil {
+		return nil, err
+	}
+	clientset, err := dynamic.NewForConfig(cfg)
+	if err != nil {
+		return nil, err
+	}
+	return clientset, nil
+}
+
+// NewKubeOutClusterClient creates a out cluster kubernetes clientset interface
+func NewDynamicOutClusterClient(config []byte) (dynamic.Interface, error) {
+	cfg, err := LoadKubeConfig(config)
+	if err != nil {
+		return nil, fmt.Errorf("unable to initialize inclusterconfig: %v", err)
+	}
+	clientset, err := dynamic.NewForConfig(cfg)
+	if err != nil {
+		return nil, fmt.Errorf("unable to initialize client: %v", err)
+	}
+	return clientset, nil
 }
 
 // NewKubeInClusterClient creates an in cluster kubernetes clientset interface
@@ -63,11 +128,11 @@ func NewKubeInClusterClient() (kubernetes.Interface, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to initialize inclusterconfig: %v", err)
 	}
-	c, err := kubernetes.NewForConfig(cfg)
+	clientset, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
 		return nil, fmt.Errorf("unable to initialize client: %v", err)
 	}
-	return c, nil
+	return clientset, nil
 }
 
 // NewKubeOutClusterClient creates a out cluster kubernetes clientset interface
@@ -122,7 +187,7 @@ func Config() (*rest.Config, error) {
 	}
 	cfg, err := rest.InClusterConfig()
 	if err == nil {
-		kubeconfig = cfg
+		kubeconfig = nil
 		return cfg, nil
 	}
 	config, err := utils.ReadFile(kubeConfigPath)
@@ -134,5 +199,5 @@ func Config() (*rest.Config, error) {
 		return nil, fmt.Errorf("unable to get inclusterconfig: %v", err)
 	}
 	kubeconfig = cfg
-	return cfg, nil
+	return kubeconfig, nil
 }

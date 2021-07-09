@@ -1,18 +1,16 @@
 package eks
 
 import (
-	"context"
 	"encoding/json"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"fmt"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
+	"terminal/models"
 	"time"
 )
 
 var (
-	clusterGVR = schema.GroupVersionResource{
+	ClusterGVR = schema.GroupVersionResource{
 		Group:    "ecns.easystack.com",
 		Version:  "v1",
 		Resource: "clusters",
@@ -20,36 +18,9 @@ var (
 )
 
 const (
-	EKS_NAMESPACE = "eks"
-	EKS_TYPE      = "EKS"
+	EksNamespace = "eks"
+	EksType      = "EKS"
 )
-
-type EOSClient struct {
-	client dynamic.Interface
-}
-
-func NewEOSclient(kubeconfig string) (*EOSClient, error) {
-	var config *rest.Config
-	var err error
-
-	if kubeconfig == "" {
-		config, err = rest.InClusterConfig()
-	} else {
-		config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	client, err := dynamic.NewForConfig(config)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &EOSClient{client: client}, nil
-}
 
 // EKSCluster struct is generated from json
 type EKSCluster struct {
@@ -96,16 +67,9 @@ type EKSCluster struct {
 	} `json:"status"`
 }
 
-func (cli *EOSClient) Clusters(projectID string) ([]EKSCluster, error) {
-	list, err := cli.client.Resource(clusterGVR).Namespace(EKS_NAMESPACE).List(context.Background(), metav1.ListOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	var result []EKSCluster
-
-	for _, c := range list.Items {
-		jsonBytes, err := c.MarshalJSON()
+func GetClusterInfo(clusterList *unstructured.UnstructuredList, clusterName, projectID string) (*models.Cluster, error) {
+	for _, cluster := range clusterList.Items {
+		jsonBytes, err := cluster.MarshalJSON()
 		if err != nil {
 			return nil, err
 		}
@@ -114,19 +78,29 @@ func (cli *EOSClient) Clusters(projectID string) ([]EKSCluster, error) {
 		if err != nil {
 			return nil, err
 		}
-		if eksCluster.Spec.Type != EKS_TYPE {
+		if eksCluster.Spec.Type != EksType {
 			continue
 		}
-		if projectID == "" {
-			result = append(result, eksCluster)
-		} else {
-			for _, p := range eksCluster.Spec.Projects {
-				if p == projectID {
-					result = append(result, eksCluster)
-				}
+
+		name := eksCluster.Spec.Eks.EksName
+		projects := eksCluster.Spec.Projects
+
+		if len(projects) > 0 && projects[0] == projectID && name == clusterName {
+			retc := &models.Cluster{
+				APIServerAddress:   eksCluster.Spec.Eks.APIAddress,
+				Name:               eksCluster.Spec.Eks.EksName,
+				ProjectID:          eksCluster.Spec.Projects[0],
+				OwnedByCurrentUser: true,
+				Status:             eksCluster.Status.ClusterStatus,
 			}
+			switch eksCluster.Status.ClusterStatus {
+			case "Healthy", "UPDATE_IN_PROGRESS", "UPDATE_FAILED", "Warning":
+				retc.Healthy = true
+			default:
+				retc.Healthy = false
+			}
+			return retc, nil
 		}
 	}
-
-	return result, nil
+	return nil, fmt.Errorf("cluster %s not found", clusterName)
 }
