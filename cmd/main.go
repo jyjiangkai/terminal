@@ -73,6 +73,8 @@ func ServeWsTerminal(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	i := 5
+	fmt.Println(i)
 	router := mux.NewRouter()
 	router.HandleFunc("/api/ecns/pod_exec/{namespace}/{pod}/{container}/", ServeWsTerminal)
 	log.Fatal(http.ListenAndServe(*addr, router))
