@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	corev1 "k8s.io/api/core/v1"
-	"log"
+	log "k8s.io/klog/v2"
 	"os"
 	"strconv"
 	"unicode/utf8"

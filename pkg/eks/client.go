@@ -4,7 +4,7 @@ import (
 	"github.com/gorilla/mux"
 	k8s "k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
-	"log"
+	log "k8s.io/klog/v2"
 	"net/http"
 	"terminal/pkg/kube"
 	"terminal/pkg/session"
@@ -23,24 +23,24 @@ func NewClient(r *http.Request) (*Client, error) {
 	// Get project id form cookies, use ems api
 	sessions, err := session.EmsSessionAuth(r)
 	if err != nil {
-		log.Printf("get session failed: %v\n", err)
+		log.Errorf("get session failed: %v", err)
 		return nil, err
 	}
 
 	client, err := kube.NewClient()
 	if err != nil {
-		log.Printf("create eks client failed, error: %v", err)
+		log.Errorf("create eks client failed, error: %v", err)
 		return nil, err
 	}
 	clusterList, err := client.ClusterBox.List(ClusterGVR, EksNamespace)
 	if err != nil {
-		log.Printf("get cluster info: cluster %s, projectID %s, error: %v", "redisnotdelete", sessions.ProjectID, err)
+		log.Errorf("get cluster list failed, cluster %s, pid %s, error: %v", clusterName, sessions.ProjectID, err)
 		return nil, err
 	}
 	// Get cluster info from cluster name and project id
 	cluster, err := GetClusterInfo(clusterList, clusterName, sessions.ProjectID)
 	if err != nil {
-		log.Printf("get cluster info: cluster %s, projectID %s, error: %v", "redisnotdelete", sessions.ProjectID, err)
+		log.Errorf("get cluster info failed, cluster %s, pid %s, error: %v", clusterName, sessions.ProjectID, err)
 		return nil, err
 	}
 

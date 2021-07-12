@@ -2,9 +2,12 @@ package session
 
 import (
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"net/http"
 	"sync"
+
+	log "k8s.io/klog/v2"
 
 	restyv2 "github.com/go-resty/resty/v2"
 )
@@ -54,12 +57,14 @@ func (sm *sessionManager) validateSession(r *http.Request) (*EmsSession, error) 
 		SetHeader("Accept", "application/json").
 		SetHeader("X-Requested-With", "XMLHttpRequest").
 		Get(fmt.Sprintf("%s://%s%s", "https", EmsSvc, EmsAPI))
-
 	if err != nil {
-		return nil, fmt.Errorf("authentication failed: %v", err)
+		log.Errorf("validate session authentication failed, error: %v", err)
+		return nil, err
 	}
 	if resp.RawResponse.StatusCode != 200 {
-		return nil, fmt.Errorf("authentication failed, code: %d", resp.RawResponse.StatusCode)
+		msg := fmt.Sprintf("validate session authentication failed, code: %d", resp.RawResponse.StatusCode)
+		log.Error(msg)
+		return nil, errors.New(msg)
 	}
 	return session, nil
 }

@@ -7,7 +7,7 @@ package main
 import (
 	"flag"
 	"github.com/gorilla/websocket"
-	"log"
+	log "k8s.io/klog/v2"
 	"net/url"
 	"os"
 	"os/signal"
@@ -23,13 +23,12 @@ var addr = flag.String("addr", "127.0.0.1:90", "http service address")
 
 func main() {
 	flag.Parse()
-	log.SetFlags(0)
 
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
 	u := url.URL{Scheme: "ws", Host: *addr, Path: "/ws/eks/eks-dashboard-api-cfz-debug-57d6b499d7-nxkbr/eks-dashboard-api/webshell"}
-	log.Printf("connecting to %s", u.String())
+	log.Infof("connecting to %s", u.String())
 
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
@@ -44,10 +43,10 @@ func main() {
 		for {
 			_, message, err := c.ReadMessage()
 			if err != nil {
-				log.Println("read:", err)
+				log.Errorf("read:", err)
 				return
 			}
-			log.Printf("[client] recv: %s", message)
+			log.Infof("[client] recv: %s", message)
 		}
 	}()
 
@@ -57,10 +56,10 @@ func main() {
 	msg, err := json.Marshal(terminal.TerminalMessage{
 		Operation: "bind",
 	})
-	log.Printf("[client] send: %v\n", msg)
+	log.Infof("[client] send: %v\n", msg)
 	err = c.WriteMessage(websocket.TextMessage, []byte(msg))
 	if err != nil {
-		log.Println("write:", err)
+		log.Errorf("write:", err)
 		return
 	}
 
@@ -69,10 +68,10 @@ func main() {
 		Cols:      120,
 		Rows:      21,
 	})
-	log.Printf("[client] send: %v\n", msg)
+	log.Infof("[client] send: %v\n", msg)
 	err = c.WriteMessage(websocket.TextMessage, []byte(msg))
 	if err != nil {
-		log.Println("write:", err)
+		log.Errorf("write:", err)
 		return
 	}
 
@@ -81,10 +80,10 @@ func main() {
 		Operation: "stdin",
 		Data:      string(in),
 	})
-	log.Printf("[client] send: %v\n", msg)
+	log.Infof("[client] send: %v\n", msg)
 	err = c.WriteMessage(websocket.TextMessage, []byte(msg))
 	if err != nil {
-		log.Println("write:", err)
+		log.Errorf("write:", err)
 		return
 	}
 
@@ -93,10 +92,10 @@ func main() {
 		Operation: "stdin",
 		Data:      string(in),
 	})
-	log.Printf("[client] send: %v\n", msg)
+	log.Infof("[client] send: %v\n", msg)
 	err = c.WriteMessage(websocket.TextMessage, []byte(msg))
 	if err != nil {
-		log.Println("write:", err)
+		log.Errorf("write:", err)
 		return
 	}
 
@@ -105,10 +104,10 @@ func main() {
 		Operation: "stdin",
 		Data:      string(in),
 	})
-	log.Printf("[client] send: %v\n", msg)
+	log.Infof("[client] send: %v\n", msg)
 	err = c.WriteMessage(websocket.TextMessage, []byte(msg))
 	if err != nil {
-		log.Println("write:", err)
+		log.Errorf("write:", err)
 		return
 	}
 
@@ -120,7 +119,7 @@ func main() {
 		case <-done:
 			return
 		case <-ticker.C:
-			log.Printf("[client] nothing send")
+			log.Infof("[client] nothing send")
 			//var in string
 			//in = "date"
 			//msg, err := json.Marshal(terminal.TerminalMessage{
@@ -146,13 +145,13 @@ func main() {
 			//      return
 			//}
 		case <-interrupt:
-			log.Println("interrupt")
+			log.Infof("interrupt")
 
 			// Cleanly close the connection by sending a close message and then
 			// waiting (with timeout) for the server to close the connection.
 			err := c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 			if err != nil {
-				log.Println("write close:", err)
+				log.Errorf("write close:", err)
 				return
 			}
 			select {

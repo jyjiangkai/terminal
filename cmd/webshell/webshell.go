@@ -7,14 +7,12 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
+	log "k8s.io/klog/v2"
 	"net/http"
 	_ "net/http/pprof"
 	"terminal/utils"
 
 	"github.com/gorilla/mux"
-	"github.com/gorilla/websocket"
-
 	"terminal/pkg/kube"
 	wsterminal "terminal/pkg/terminal/websocket"
 )
@@ -23,11 +21,6 @@ var (
 	addr = flag.String("addr", ":8090", "http service address")
 	cmd  = []string{"/bin/sh"}
 )
-
-func internalError(ws *websocket.Conn, msg string, err error) {
-	log.Println(msg, err)
-	ws.WriteMessage(websocket.TextMessage, []byte("Internal server error."))
-}
 
 func serveTerminal(w http.ResponseWriter, r *http.Request) {
 	// auth
@@ -52,32 +45,32 @@ func serveWsTerminal(w http.ResponseWriter, r *http.Request) {
 	namespace := pathParams["namespace"]
 	podName := pathParams["pod"]
 	containerName := pathParams["container"]
-	log.Printf("exec pod: %s, container: %s, namespace: %s\n", podName, containerName, namespace)
+	log.Infof("exec pod: %s, container: %s, namespace: %s\n", podName, containerName, namespace)
 
 	pty, err := wsterminal.NewTerminalSession(w, r, nil)
 	if err != nil {
-		log.Printf("get pty failed: %v\n", err)
+		log.Errorf("get pty failed: %v\n", err)
 		return
 	}
 	defer func() {
-		log.Println("close session.")
+		log.Infof("close session.")
 		pty.Close()
 	}()
 
 	client, err := kube.NewClient()
 	if err != nil {
-		log.Printf("get kubernetes client failed: %v\n", err)
+		log.Errorf("get kubernetes client failed: %v\n", err)
 		return
 	}
 	pod, err := client.PodBox.Get(podName, namespace)
 	if err != nil {
-		log.Printf("get kubernetes client failed: %v\n", err)
+		log.Errorf("get kubernetes client failed: %v\n", err)
 		return
 	}
 	ok, err := utils.ValidatePod(pod, containerName)
 	if !ok {
 		msg := fmt.Sprintf("Validate pod error! err: %v", err)
-		log.Println(msg)
+		log.Errorf(msg)
 		pty.Write([]byte(msg))
 		pty.Done()
 		return
@@ -85,7 +78,7 @@ func serveWsTerminal(w http.ResponseWriter, r *http.Request) {
 	err = client.PodBox.Exec(cmd, pty, namespace, podName, containerName)
 	if err != nil {
 		msg := fmt.Sprintf("Exec to pod error! err: %v", err)
-		log.Println(msg)
+		log.Errorf(msg)
 		pty.Write([]byte(msg))
 		pty.Done()
 	}

@@ -3,19 +3,20 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"net/http"
-	"terminal/utils"
+
+	log "k8s.io/klog/v2"
 
 	"github.com/gorilla/mux"
 
 	"terminal/pkg/eks"
 	"terminal/pkg/terminal/websocket"
+	"terminal/utils"
 )
 
 var (
-	addr         = flag.String("addr", "0.0.0.0:90", "http service address")
-	exec_command = []string{"/bin/sh", "-c", "TERM=xterm-256color; export TERM; [ -x /bin/bash ] && ([ -x /usr/bin/script ] && /usr/bin/script -q -c \"/bin/bash\" /dev/null || exec /bin/bash) || exec /bin/sh"}
+	addr        = flag.String("addr", "0.0.0.0:90", "http service address")
+	execCommand = []string{"/bin/sh", "-c", "TERM=xterm-256color; export TERM; [ -x /bin/bash ] && ([ -x /usr/bin/script ] && /usr/bin/script -q -c \"/bin/bash\" /dev/null || exec /bin/bash) || exec /bin/sh"}
 )
 
 func ServeWsTerminal(w http.ResponseWriter, r *http.Request) {
@@ -23,47 +24,51 @@ func ServeWsTerminal(w http.ResponseWriter, r *http.Request) {
 	namespace := pathParams["namespace"]
 	podName := pathParams["pod"]
 	containerName := pathParams["container"]
-	log.Printf("exec pod: %s, container: %s, namespace: %s\n", podName, containerName, namespace)
+	log.Infof("Received pod exec request, namespace: %s, pod: %s, container: %s", namespace, podName, containerName)
 
 	pty, err := websocket.NewTerminalSession(w, r, nil)
 	if err != nil {
-		log.Printf("get pty failed: %v\n", err)
+		log.Errorf("New websocket terminal session failed, err: %v", err)
 		return
 	}
 	defer func() {
-		log.Println("close session.")
+		log.Info("Close websocket terminal session.")
 		pty.Close()
 	}()
+	log.Info("New websocket terminal session success.")
 
 	eksclient, err := eks.NewClient(r)
 	if err != nil {
-		log.Printf("create eks client failed, error: %v", err)
+		log.Errorf("New eks client failed, err: %v", err)
 		return
 	}
+	log.Info("New websocket terminal session success.")
 
 	pod, err := eksclient.Get(podName, namespace)
 	if err != nil {
-		log.Printf("get kubernetes client failed: %v\n", err)
+		log.Errorf("Get eks pod failed, pod: %s, err: %v", podName, err)
 		return
 	}
-	log.Printf("Get pod: %v\n", pod)
+	log.Infof("Get eks pod success, pod: %v", pod)
 
 	ok, err := utils.ValidatePod(pod, containerName)
 	if !ok {
-		msg := fmt.Sprintf("Validate pod error! err: %v", err)
-		log.Println(msg)
+		msg := fmt.Sprintf("Validate pod failed, pod: %v, container: %s, err: %v", pod, containerName, err)
+		log.Errorf(msg)
 		pty.Write([]byte(msg))
 		pty.Done()
 		return
 	}
+	log.Infof("Validate pod success, pod: %v\n", pod)
 
-	err = eksclient.Exec(exec_command, pty, namespace, podName, containerName)
+	err = eksclient.Exec(execCommand, pty, namespace, podName, containerName)
 	if err != nil {
-		msg := fmt.Sprintf("Exec to pod error! err: %v", err)
-		log.Println(msg)
+		msg := fmt.Sprintf("Exec to eks pod failed, namespace: %s, pod: %s, container: %s, err: %v", namespace, podName, containerName, err)
+		log.Errorf(msg)
 		pty.Write([]byte(msg))
 		pty.Done()
 	}
+	log.Infof("Exec to eks pod success, namespace: %s, pod: %s, container: %s", namespace, podName, containerName)
 	return
 }
 

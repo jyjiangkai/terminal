@@ -3,7 +3,7 @@ package websocket
 import (
 	"encoding/json"
 	"io"
-	"log"
+	log "k8s.io/klog/v2"
 	"net/http"
 	"time"
 
@@ -89,12 +89,12 @@ func (t *TerminalSession) Stderr() io.Writer {
 func (t *TerminalSession) Read(p []byte) (int, error) {
 	_, message, err := t.wsConn.ReadMessage()
 	if err != nil {
-		log.Printf("read message err: %v", err)
+		log.Errorf("read message err: %v", err)
 		return copy(p, terminal.EndOfTransmission), err
 	}
 	var msg terminal.TerminalMessage
 	if err := json.Unmarshal([]byte(message), &msg); err != nil {
-		log.Printf("read parse message err: %v", err)
+		log.Errorf("read parse message err: %v", err)
 		// return 0, nil
 		return copy(p, terminal.EndOfTransmission), err
 	}
@@ -107,7 +107,7 @@ func (t *TerminalSession) Read(p []byte) (int, error) {
 	case "ping":
 		return 0, nil
 	default:
-		log.Printf("unknown message type '%s'", msg.Operation)
+		log.Errorf("unknown message type '%s'", msg.Operation)
 		return 0, nil
 		//return copy(p, terminal.EndOfTransmission), fmt.Errorf("unknown message type '%s'", msg.Operation)
 	}
@@ -120,11 +120,11 @@ func (t *TerminalSession) Write(p []byte) (int, error) {
 		Data:      string(p),
 	})
 	if err != nil {
-		log.Printf("write parse message err: %v", err)
+		log.Errorf("write parse message err: %v", err)
 		return 0, err
 	}
 	if err := t.wsConn.WriteMessage(websocket.TextMessage, msg); err != nil {
-		log.Printf("write message err: %v", err)
+		log.Errorf("write message err: %v", err)
 		return 0, err
 	}
 	return len(p), nil
