@@ -16,7 +16,6 @@ vet:
 
 prepare:
 	mkdir -p bin
-#	cp config/crd/* bin/
 
 # Build binarys
 build:
@@ -32,8 +31,8 @@ push-image:
 	docker push $(DOCKER_REPO):$(DOCKER_TAG)
 
 
-.PHONY: copy-k8s-device-plugin
-copy-k8s-device-plugin:
+.PHONY: copy-terminal
+copy-terminal:
 	@mkdir -p $(PROJECT_DIR)
 	@cp -rf $(shell command pwd;) $(PROJECT_DIR)
 	@mkdir -p $(PROJECT_DIR)/$(NAME)/bin
